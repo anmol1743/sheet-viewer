@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Sheet Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    h2 { color: #333; }
+    table { border-collapse: collapse; width: 100%; background: white; margin-top: 20px; }
+    th, td { padding: 10px 15px; border: 1px solid #ccc; text-align: left; }
+    th { background: #007BFF; color: white; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #e8f0ff; }
+    select { padding: 6px 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Live Sheet Data Viewer</h2>
+
+<label for="sheetSelect">Select Date:</label>
+<select id="sheetSelect">
+  <option value="03-06-25">03-06-25</option>
+  <option value="04-06-25">04-06-25</option>
+  <option value="05-06-25">05-06-25</option>
+  <option value="06-06-25">06-06-25</option>
+</select>
+
+<p id="loading">Loading data...</p>
+<table id="data-table">
+  <thead><tr id="table-header"></tr></thead>
+  <tbody id="table-body"></tbody>
+</table>
+
+<script>
+  const apiBase = 'https://script.google.com/macros/s/AKfycbwN68vYIMGFUyOTN52DEuGZYaTHCGIG8sNJQEpqJbl4afq5u2iZEoJUgHXYq9p3xzql/exec';
+
+  function loadSheet(sheetName) {
+    document.getElementById('loading').textContent = `Loading sheet: ${sheetName}`;
+    const url = `${apiBase}?sheet=${sheetName}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('loading').textContent = data.error;
+          return;
+        }
+
+        const headers = data[0];
+        const rows = data.slice(1);
+        const headerRow = document.getElementById('table-header');
+        const tableBody = document.getElementById('table-body');
+
+        headerRow.innerHTML = '';
+        tableBody.innerHTML = '';
+        document.getElementById('loading').textContent = '';
+
+        headers.forEach(header => {
+          const th = document.createElement('th');
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+
+        rows.forEach(row => {
+          const tr = document.createElement('tr');
+          headers.forEach((_, i) => {
+            const td = document.createElement('td');
+            td.textContent = row[i] || '';
+            tr.appendChild(td);
+          });
+          tableBody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('loading').textContent = 'Failed to load data.';
+      });
+  }
+
+  // Load default
+  loadSheet('03-06-25');
+
+  // Change sheet when selected
+  document.getElementById('sheetSelect').addEventListener('change', function () {
+    loadSheet(this.value);
+  });
+</script>
+
+</body>
+</html>
